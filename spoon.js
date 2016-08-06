@@ -1,5 +1,78 @@
 var SPOON_APP = SPOON_APP || {};
 
+SPOON_APP.Level = function(app) {
+    this.app = app;
+    this.endLevelCallbacks = [];
+}
+
+SPOON_APP.Level.prototype.update = function() {}
+
+SPOON_APP.Level.prototype.isFinished = function() {
+    return true;
+}
+
+SPOON_APP.ForksLevel = function(app) {
+    SPOON_APP.Level.call(this, app);
+    this.forks = app.game.add.group();
+    this.forks.enableBody = true;
+    this.forks.physicsBodyType = Phaser.Physics.ARCADE;
+    for (var y = 0; y < 2; y++) {
+        for (var x = 0; x < 5; x++) {
+            var fork = this.forks.create(x * 100, y * -400 + 50, 'fork');
+            fork.angle = Math.random() * 360; // TODO func
+            fork.anchor = new Phaser.Point(0.5, 0.5);
+            // fork.body.collideWorldBounds = true;
+            fork.body.bounce.x = 1;
+            fork.body.bounce.y = 1;
+            fork.body.angularVelocity = 360;
+            // fork.body.velocity.x = Math.random() * 100 - 200;
+            fork.body.velocity.y = Math.random() * 50 + 25;
+        }
+    }
+    this.forks.x = 100;
+    this.forks.y = 50;
+    this.app.updateEnemyLives(this.forks.length);
+}
+
+SPOON_APP.ForksLevel.prototype = new SPOON_APP.Level();
+
+SPOON_APP.ForksLevel.prototype.update = function() {
+    // TODO this is dumb
+    this.forks.forEach(function(fork) {
+        if (fork.body.y > 0 && !fork.body.collideWorldBounds) {
+            fork.body.collideWorldBounds = true;
+            fork.body.velocity.x = Math.random() * 400 - 200;
+        }
+    });
+
+    // TODO why doesn't game.physics.arcade.overlap(forks, bullets, bulletHitsEnemey, null, this) work??!?!
+    this.app.bullets.forEach(function(bullet) {
+        this.forks.forEach(function(fork) {
+            if (this.app.game.physics.arcade.intersects(fork.body, bullet.body)) {
+                bullet.kill();
+                fork.destroy();
+                this.app.updateEnemyLives(this.forks.length);
+                this.app.addScore(100);
+            }
+        }, this);
+    }, this);
+
+    this.forks.forEach(function(fork) {
+        if (this.app.game.physics.arcade.intersects(fork.body, this.app.player.body)) {
+            fork.destroy();
+            this.app.updateEnemyLives(this.forks.length);
+            this.app.addScore(-200);
+            this.app.removeLife();
+        }
+    }, this);
+    // TODO why doesn't this work either?!?!
+    // this.app.game.physics.arcade.overlap(this.app.player, this.forks, this.playerHitsEnemy, null, this);
+}
+
+SPOON_APP.ForksLevel.prototype.isFinished = function() {
+    return this.forks.length == 0;
+}
+
 SPOON_APP.SCORE_PREFIX = 'Score: ';
 SPOON_APP.LIVES_PREFIX = 'Lives: ';
 SPOON_APP.ENEMY_PREFIX = 'Enemy: ';
@@ -35,31 +108,10 @@ SPOON_APP.createBullets = function() {
     this.bullets.trackSprite(this.player, 0, 0, true);
     this.bullets.trackRotation = false;
     this.bullets.onFire.add(function() {
+        // TODO use func
         this.score -= 1;
         this.scoreText.text = this.SCORE_PREFIX + this.score;
     }, this);
-}
-
-SPOON_APP.createForks = function() {
-    this.forks = this.game.add.group();
-    this.forks.enableBody = true;
-    this.forks.physicsBodyType = Phaser.Physics.ARCADE;
-    for (var y = 0; y < 5; y++) {
-        for (var x = 0; x < 5; x++) {
-            var fork = this.forks.create(x * 100, y * -400 + 50, 'fork');
-            fork.angle = Math.random() * 360; // TODO func
-            fork.anchor = new Phaser.Point(0.5, 0.5);
-            // fork.body.collideWorldBounds = true;
-            fork.body.bounce.x = 1;
-            fork.body.bounce.y = 1;
-            fork.body.angularVelocity = 360;
-            // fork.body.velocity.x = Math.random() * 100 - 200;
-            fork.body.velocity.y = Math.random() * 50 + 25;
-            this.enemyLives++;
-        }
-    }
-    this.forks.x = 100;
-    this.forks.y = 50;
 }
 
 SPOON_APP.createInput = function() {
@@ -68,6 +120,7 @@ SPOON_APP.createInput = function() {
 }
 
 SPOON_APP.createTexts = function() {
+    // TODO use funcs
     var labelStyle = { font: '24px Arial', fill: '#fff' };
     this.score = 0;
     this.scoreText = this.game.add.text(10, 10, this.SCORE_PREFIX + this.score, labelStyle);
@@ -87,28 +140,23 @@ SPOON_APP.create = function() {
     this.game.physics.startSystem(Phaser.Physics.ARCADE);
     this.createPlayer();
     this.createBullets();
-    this.createForks();
     this.createInput();
     this.createTexts();
+
+    this.level = new SPOON_APP.ForksLevel(this);
 }
 
-SPOON_APP.bulletHitsEnemey = function(bullet, enemy) {
-    bullet.kill();
-    enemy.destroy();
-    this.enemyLives--;
-    this.enemyText.text = this.ENEMY_PREFIX + this.enemyLives;
+SPOON_APP.updateEnemyLives = function(enemyLives) {
+    this.enemyText.text = this.ENEMY_PREFIX + enemyLives;
+}
 
-    this.score += 100;
+SPOON_APP.addScore = function(scoreDelta) {
+    this.score += scoreDelta;
     this.scoreText.text = this.SCORE_PREFIX + this.score;
 }
 
-SPOON_APP.playerHitsEnemy = function(player, enemy) {
-    enemy.destroy();
-    this.enemyLives--;
-    this.enemyText.text = this.ENEMY_PREFIX + this.enemyLives;
+SPOON_APP.removeLife = function() {
     this.lives--;
-    this.score -= 200;
-    this.scoreText.text = this.SCORE_PREFIX + this.score;
     if (this.lives > 0) {
         // TODO "blink"
         this.livesText.text = this.LIVES_PREFIX;
@@ -122,8 +170,6 @@ SPOON_APP.playerHitsEnemy = function(player, enemy) {
 }
 
 SPOON_APP.update = function() {
-
-
     this.starfield.tilePosition.y += 2;
     // TODO inertia and drag (rotation?)
     this.player.body.acceleration.x = 0;
@@ -153,31 +199,18 @@ SPOON_APP.update = function() {
         this.bullets.fire();
     }
 
-    // TODO this is dumb
-    this.forks.forEach(function(fork) {
-        if (fork.body.y > 0 && !fork.body.collideWorldBounds) {
-            fork.body.collideWorldBounds = true;
-            fork.body.velocity.x = Math.random() * 400 - 200;
-        }
-    });
+    this.level.update();
 
-    // TODO why doesn't game.physics.arcade.overlap(forks, bullets, bulletHitsEnemey, null, this) work??!?!
-    this.bullets.forEach(function(bullet) {
-        this.forks.forEach(function(fork) {
-            if (this.game.physics.arcade.intersects(fork.body, bullet.body)) {
-                this.bulletHitsEnemey(bullet, fork);
-            }
-        }, this);
-    }, this);
-    this.game.physics.arcade.overlap(this.player, this.forks, this.playerHitsEnemy, null, this);
+    if (this.level.isFinished()) {
+        // TODO console.log("All done!");
+    }
 }
 
 SPOON_APP.main = function() {
-    // var player, cursors, bullets, fireButton, forks, score, scoreText, lives, livesText, starfield, enemyLives, enemyText;
-
     var gameDiv = document.getElementById('game');
     // TODO based on CSS
     this.game = new Phaser.Game(850, 600, Phaser.AUTO, gameDiv, {
+        // TODO below is awk
         preload: function() {SPOON_APP.preload()},
         create: function() {SPOON_APP.create()},
         update: function() {SPOON_APP.update()}
