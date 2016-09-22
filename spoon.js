@@ -16,7 +16,7 @@ SPOON_APP.ForksLevel = function(app) {
     this.forks = app.game.add.group();
     this.forks.enableBody = true;
     this.forks.physicsBodyType = Phaser.Physics.ARCADE;
-    for (var y = 0; y < 3; y++) {
+    for (var y = 0; y < 10; y++) {
         for (var x = 0; x < 5; x++) {
             var fork = this.forks.create(x * 100, y * -400 + 50, 'fork');
             fork.angle = Math.random() * 360; // TODO func
@@ -156,16 +156,22 @@ SPOON_APP.addScore = function(scoreDelta) {
 };
 
 SPOON_APP.removeLife = function() {
-    this.lives--;
+    if (this.lives <= 0) {
+        return;
+    }
     if (this.lives > 0) {
         // TODO "blink"
+        this.lives--;
         this.livesText.text = this.LIVES_PREFIX;
         for (var i = 0; i < this.lives; i++) {
             this.livesText.text += "💛";
         }
-    } else {
-        // TODO
+    }
+    if (this.lives == 0) {
+        var labelStyle = { font: '36px Arial', fill: '#fff' };
+        this.game.add.text(this.game.world.width / 2 - 125, this.game.world.height / 2 - 50, 'GAME OVER', labelStyle);
         console.log('Game Over');
+        this.gaveOver = true;
     }
 };
 
@@ -202,7 +208,12 @@ SPOON_APP.update = function() {
     this.level.update();
 
     if (this.level.isFinished()) {
-        // TODO console.log("All done!");
+        if (!this.gaveOver) {
+            var labelStyle = { font: '36px Arial', fill: '#fff' };
+            this.game.add.text(this.game.world.width / 2 - 110, this.game.world.height / 2 - 50, 'YOU WIN', labelStyle);
+            console.log('You win!');
+            this.gaveOver = true;
+        }
     }
 };
 
