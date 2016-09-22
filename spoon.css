@@ -1,7 +1,30 @@
 /* TODO never change */
+#main {
+    float: left;
+    width: 1260px;
+}
+
 #game {
     position: relative;
     width: 850px;
     height: 600px;
     margin-bottom: 50px;
+    float: left;
+}
+
+#side {
+    float: left;
+    width: 400px;
+    font-size: 24px;
+    font-family: Impact, Charcoal, sans-serif;
+    letter-spacing: 1px;
+    margin-right: 10px;
+}
+
+#side h1 {
+    font-size: 48px;
+}
+
+#side li {
+    margin-bottom: 10px;
 }

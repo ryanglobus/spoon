@@ -3,20 +3,20 @@ var SPOON_APP = SPOON_APP || {};
 SPOON_APP.Level = function(app) {
     this.app = app;
     this.endLevelCallbacks = [];
-}
+};
 
-SPOON_APP.Level.prototype.update = function() {}
+SPOON_APP.Level.prototype.update = function() {};
 
 SPOON_APP.Level.prototype.isFinished = function() {
     return true;
-}
+};
 
 SPOON_APP.ForksLevel = function(app) {
     SPOON_APP.Level.call(this, app);
     this.forks = app.game.add.group();
     this.forks.enableBody = true;
     this.forks.physicsBodyType = Phaser.Physics.ARCADE;
-    for (var y = 0; y < 2; y++) {
+    for (var y = 0; y < 3; y++) {
         for (var x = 0; x < 5; x++) {
             var fork = this.forks.create(x * 100, y * -400 + 50, 'fork');
             fork.angle = Math.random() * 360; // TODO func
@@ -32,7 +32,7 @@ SPOON_APP.ForksLevel = function(app) {
     this.forks.x = 100;
     this.forks.y = 50;
     this.app.updateEnemyLives(this.forks.length);
-}
+};
 
 SPOON_APP.ForksLevel.prototype = new SPOON_APP.Level();
 
@@ -67,11 +67,11 @@ SPOON_APP.ForksLevel.prototype.update = function() {
     }, this);
     // TODO why doesn't this work either?!?!
     // this.app.game.physics.arcade.overlap(this.app.player, this.forks, this.playerHitsEnemy, null, this);
-}
+};
 
 SPOON_APP.ForksLevel.prototype.isFinished = function() {
     return this.forks.length == 0;
-}
+};
 
 SPOON_APP.SCORE_PREFIX = 'Score: ';
 SPOON_APP.LIVES_PREFIX = 'Lives: ';
@@ -83,7 +83,7 @@ SPOON_APP.preload = function() {
     this.game.load.image('spoon', 'assets/spoon.png');
     this.game.load.image('fork', 'assets/fork.png');
     this.game.load.image('starfield', 'assets/starfield.png');
-}
+};
 
 SPOON_APP.createPlayer = function() {
     this.player = this.game.add.sprite((this.game.world.width - 48) / 2, this.game.world.height - 150, 'spoon');
@@ -94,7 +94,7 @@ SPOON_APP.createPlayer = function() {
     this.player.body.collideWorldBounds = true;
     this.player.anchor = new Phaser.Point(0.5, 0.5);
     this.player.body.drag = new Phaser.Point(100, 100); // TODO drag seems to be not at same angle as spoon
-}
+};
 
 SPOON_APP.createBullets = function() {
     this.bullets = this.game.add.weapon(30, 'bullet');
@@ -112,12 +112,12 @@ SPOON_APP.createBullets = function() {
         this.score -= 1;
         this.scoreText.text = this.SCORE_PREFIX + this.score;
     }, this);
-}
+};
 
 SPOON_APP.createInput = function() {
     this.cursors = this.game.input.keyboard.createCursorKeys();
     this.fireButton = this.game.input.keyboard.addKey(Phaser.KeyCode.SPACEBAR);
-}
+};
 
 SPOON_APP.createTexts = function() {
     // TODO use funcs
@@ -132,7 +132,7 @@ SPOON_APP.createTexts = function() {
     }
 
     this.enemyText = this.game.add.text(this.game.world.width - 150, this.game.world.height - 40, this.ENEMY_PREFIX + this.enemyLives, labelStyle);
-}
+};
 
 SPOON_APP.create = function() {
     this.enemyLives = 0;
@@ -144,16 +144,16 @@ SPOON_APP.create = function() {
     this.createTexts();
 
     this.level = new SPOON_APP.ForksLevel(this);
-}
+};
 
 SPOON_APP.updateEnemyLives = function(enemyLives) {
     this.enemyText.text = this.ENEMY_PREFIX + enemyLives;
-}
+};
 
 SPOON_APP.addScore = function(scoreDelta) {
     this.score += scoreDelta;
     this.scoreText.text = this.SCORE_PREFIX + this.score;
-}
+};
 
 SPOON_APP.removeLife = function() {
     this.lives--;
@@ -167,7 +167,7 @@ SPOON_APP.removeLife = function() {
         // TODO
         console.log('Game Over');
     }
-}
+};
 
 SPOON_APP.update = function() {
     this.starfield.tilePosition.y += 2;
@@ -204,7 +204,7 @@ SPOON_APP.update = function() {
     if (this.level.isFinished()) {
         // TODO console.log("All done!");
     }
-}
+};
 
 SPOON_APP.main = function() {
     var gameDiv = document.getElementById('game');
@@ -220,4 +220,4 @@ SPOON_APP.main = function() {
 
 window.onload = function() {
     SPOON_APP.main();
-}
+};
